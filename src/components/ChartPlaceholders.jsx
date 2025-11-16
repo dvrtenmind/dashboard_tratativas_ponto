@@ -1,5 +1,6 @@
 import BarChartBySituacao from './BarChartBySituacao'
 import LineChartBySituacao from './LineChartBySituacao'
+import PieChartOcorrenciasEspeciais from './PieChartOcorrenciasEspeciais'
 
 function ChartPlaceholders() {
   const ChartBox = ({ title, subtitle }) => (
@@ -25,10 +26,7 @@ function ChartPlaceholders() {
       {/* Linha superior - 2 gráficos */}
       <div className="grid grid-cols-2 gap-4">
         <BarChartBySituacao />
-        <ChartBox
-          title="Gráfico 2"
-          subtitle="Espaço reservado para visualização"
-        />
+        <PieChartOcorrenciasEspeciais />
       </div>
 
       {/* Linha do meio - 1 gráfico largo */}
