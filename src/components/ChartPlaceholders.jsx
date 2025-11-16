@@ -1,6 +1,7 @@
 import BarChartBySituacao from './BarChartBySituacao'
 import LineChartBySituacao from './LineChartBySituacao'
 import PieChartOcorrenciasEspeciais from './PieChartOcorrenciasEspeciais'
+import OccurrencesTable from './OccurrencesTable'
 
 function ChartPlaceholders() {
   const ChartBox = ({ title, subtitle }) => (
@@ -22,7 +23,7 @@ function ChartPlaceholders() {
   )
 
   return (
-    <div className="grid grid-rows-[340px_350px_340px] gap-3">
+    <div className="grid grid-rows-[340px_350px_400px] gap-3">
       {/* Linha superior - 2 gráficos */}
       <div className="grid grid-cols-2 gap-4">
         <BarChartBySituacao />
@@ -34,16 +35,9 @@ function ChartPlaceholders() {
         <LineChartBySituacao />
       </div>
 
-      {/* Linha inferior - 2 gráficos */}
-      <div className="grid grid-cols-2 gap-4">
-        <ChartBox
-          title="Gráfico 4"
-          subtitle="Espaço reservado para visualização"
-        />
-        <ChartBox
-          title="Gráfico 5"
-          subtitle="Espaço reservado para visualização"
-        />
+      {/* Linha inferior - Tabela de ocorrências */}
+      <div className="grid grid-cols-1">
+        <OccurrencesTable />
       </div>
     </div>
   )
