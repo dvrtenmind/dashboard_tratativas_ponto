@@ -70,8 +70,44 @@ export function useChartData() {
     return Object.values(grouped).sort((a, b) => b.total_ocorrencias - a.total_ocorrencias)
   }, [filteredData])
 
+  // Agrupa dados por data e situação (para gráfico de linhas)
+  const dataGroupedByDateAndSituacao = useMemo(() => {
+    if (!filteredData || filteredData.length === 0) return []
+
+    const grouped = {}
+
+    filteredData.forEach(item => {
+      const data = item.data
+      const situacao = item.situacao || 'Sem Situação'
+      const key = `${data}|${situacao}`
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          data,
+          situacao,
+          total_ocorrencias: 0,
+          soma_horas: 0
+        }
+      }
+
+      grouped[key].total_ocorrencias += 1
+
+      // Converte total_horas_ocorrencia para horas decimais
+      if (item.total_horas_ocorrencia) {
+        const horasStr = item.total_horas_ocorrencia
+        const [horas, minutos, segundos] = horasStr.split(':').map(Number)
+        const horasDecimal = horas + (minutos / 60) + (segundos / 3600)
+        grouped[key].soma_horas += horasDecimal
+      }
+    })
+
+    // Converte objeto em array e ordena por data
+    return Object.values(grouped).sort((a, b) => new Date(a.data) - new Date(b.data))
+  }, [filteredData])
+
   return {
     dataGroupedBySituacao,
+    dataGroupedByDateAndSituacao,
     filteredData
   }
 }

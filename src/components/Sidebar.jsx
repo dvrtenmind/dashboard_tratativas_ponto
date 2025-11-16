@@ -51,7 +51,7 @@ function Sidebar() {
   )
 
   return (
-    <aside className="w-80 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-full">
+    <aside className="w-80 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-full overflow-y-auto">
       <div className="p-6 space-y-6 overflow-y-auto flex-1">
         {/* Título */}
         <div>

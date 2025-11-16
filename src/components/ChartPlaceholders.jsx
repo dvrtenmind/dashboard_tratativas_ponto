@@ -1,4 +1,5 @@
 import BarChartBySituacao from './BarChartBySituacao'
+import LineChartBySituacao from './LineChartBySituacao'
 
 function ChartPlaceholders() {
   const ChartBox = ({ title, subtitle }) => (
@@ -20,7 +21,7 @@ function ChartPlaceholders() {
   )
 
   return (
-    <div className="h-full grid grid-rows-[1.3fr_1fr_1.3fr] gap-3">
+    <div className="grid grid-rows-[340px_350px_340px] gap-3">
       {/* Linha superior - 2 gráficos */}
       <div className="grid grid-cols-2 gap-4">
         <BarChartBySituacao />
@@ -32,20 +33,17 @@ function ChartPlaceholders() {
 
       {/* Linha do meio - 1 gráfico largo */}
       <div className="grid grid-cols-1">
-        <ChartBox
-          title="Gráfico Principal"
-          subtitle="Espaço reservado para visualização ampla"
-        />
+        <LineChartBySituacao />
       </div>
 
       {/* Linha inferior - 2 gráficos */}
       <div className="grid grid-cols-2 gap-4">
         <ChartBox
-          title="Gráfico 3"
+          title="Gráfico 4"
           subtitle="Espaço reservado para visualização"
         />
         <ChartBox
-          title="Gráfico 4"
+          title="Gráfico 5"
           subtitle="Espaço reservado para visualização"
         />
       </div>
