@@ -1,9 +1,11 @@
 import { useTheme } from '../contexts/ThemeContext'
 import { useExport } from '../hooks/useExport'
+import { useAuth } from '../contexts/AuthContext'
 
 function Header() {
   const { theme, toggleTheme } = useTheme()
   const { exportToCSV, exportToExcel, isExporting } = useExport()
+  const { user, signOut } = useAuth()
 
   return (
     <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 px-6 py-4">
@@ -14,7 +16,7 @@ function Header() {
             Dashboard de Ocorrências
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            Controle de Ponto
+            Controle de Ponto {user?.email && `• ${user.email}`}
           </p>
         </div>
 
@@ -55,6 +57,15 @@ function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
+          </button>
+
+          {/* Botão Logout */}
+          <button
+            onClick={signOut}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            aria-label="Sair"
+          >
+            Sair
           </button>
         </div>
       </div>
