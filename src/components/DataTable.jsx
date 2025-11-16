@@ -1,10 +1,10 @@
-import { useSupabase } from '../hooks/useSupabase'
+import { useData } from '../contexts/DataContext'
 import { useFilters } from '../contexts/FilterContext'
 import { useMemo } from 'react'
 import { format, parseISO } from 'date-fns'
 
 function DataTable() {
-  const { data: ocorrencias, loading, error } = useSupabase()
+  const { data: ocorrencias, loading, error } = useData()
   const { filters } = useFilters()
 
   // Aplica os filtros nos dados

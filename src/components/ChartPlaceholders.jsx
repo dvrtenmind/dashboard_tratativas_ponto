@@ -1,3 +1,5 @@
+import BarChartBySituacao from './BarChartBySituacao'
+
 function ChartPlaceholders() {
   const ChartBox = ({ title, subtitle }) => (
     <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 flex items-center justify-center h-full">
@@ -18,19 +20,12 @@ function ChartPlaceholders() {
   )
 
   return (
-    <div className="h-full grid grid-rows-[1fr_1.2fr_1fr] gap-4">
-      {/* Linha superior - 3 gráficos */}
-      <div className="grid grid-cols-3 gap-4">
-        <ChartBox
-          title="Gráfico 1"
-          subtitle="Espaço reservado para visualização"
-        />
+    <div className="h-full grid grid-rows-[1.3fr_1fr_1.3fr] gap-3">
+      {/* Linha superior - 2 gráficos */}
+      <div className="grid grid-cols-2 gap-4">
+        <BarChartBySituacao />
         <ChartBox
           title="Gráfico 2"
-          subtitle="Espaço reservado para visualização"
-        />
-        <ChartBox
-          title="Gráfico 3"
           subtitle="Espaço reservado para visualização"
         />
       </div>
@@ -43,18 +38,14 @@ function ChartPlaceholders() {
         />
       </div>
 
-      {/* Linha inferior - 3 gráficos */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Linha inferior - 2 gráficos */}
+      <div className="grid grid-cols-2 gap-4">
+        <ChartBox
+          title="Gráfico 3"
+          subtitle="Espaço reservado para visualização"
+        />
         <ChartBox
           title="Gráfico 4"
-          subtitle="Espaço reservado para visualização"
-        />
-        <ChartBox
-          title="Gráfico 5"
-          subtitle="Espaço reservado para visualização"
-        />
-        <ChartBox
-          title="Gráfico 6"
           subtitle="Espaço reservado para visualização"
         />
       </div>

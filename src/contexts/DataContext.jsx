@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase, TABLE_NAME } from '../utils/supabaseClient'
 
-export function useSupabase() {
+const DataContext = createContext()
+
+export function DataProvider({ children }) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -54,5 +56,17 @@ export function useSupabase() {
     fetchData()
   }
 
-  return { data, loading, error, refresh }
+  return (
+    <DataContext.Provider value={{ data, loading, error, refresh }}>
+      {children}
+    </DataContext.Provider>
+  )
+}
+
+export function useData() {
+  const context = useContext(DataContext)
+  if (context === undefined) {
+    throw new Error('useData must be used within a DataProvider')
+  }
+  return context
 }

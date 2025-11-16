@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { useSupabase } from './useSupabase'
+import { useData } from '../contexts/DataContext'
 import { useFilters } from '../contexts/FilterContext'
 import * as XLSX from 'xlsx'
 import { format } from 'date-fns'
 
 export function useExport() {
   const [isExporting, setIsExporting] = useState(false)
-  const { data: ocorrencias } = useSupabase()
+  const { data: ocorrencias } = useData()
   const { filters } = useFilters()
 
   // Função para filtrar os dados (mesma lógica do DataTable)

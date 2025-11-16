@@ -1,10 +1,10 @@
 import { useFilters } from '../contexts/FilterContext'
-import { useSupabase } from '../hooks/useSupabase'
+import { useData } from '../contexts/DataContext'
 import { useState, useEffect } from 'react'
 
 function Sidebar() {
   const { filters, updateDateRange, updateSituacoes, updateColaboradores, clearFilters } = useFilters()
-  const { data: ocorrencias } = useSupabase()
+  const { data: ocorrencias } = useData()
 
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
