@@ -1,11 +1,13 @@
 import { useTheme } from '../contexts/ThemeContext'
 import { useExport } from '../hooks/useExport'
 import { useAuth } from '../contexts/AuthContext'
+import { useData } from '../contexts/DataContext'
 
 function Header() {
   const { theme, toggleTheme } = useTheme()
   const { exportToCSV, exportToExcel, isExporting } = useExport()
   const { user, signOut } = useAuth()
+  const { refresh, loading } = useData()
 
   return (
     <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 px-6 py-4">
@@ -22,6 +24,19 @@ function Header() {
 
         {/* Ações */}
         <div className="flex items-center gap-3">
+          {/* Botão Recarregar Dados */}
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="p-2 text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Recarregar dados"
+            title="Recarregar dados"
+          >
+            <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+
           {/* Botão Export CSV */}
           <button
             onClick={exportToCSV}
