@@ -38,6 +38,18 @@ export function FilterProvider({ children }) {
     }))
   }
 
+  const toggleSituacao = (situacao) => {
+    setFilters(prev => {
+      const isSelected = prev.situacoes.includes(situacao)
+      return {
+        ...prev,
+        situacoes: isSelected
+          ? prev.situacoes.filter(s => s !== situacao)
+          : [...prev.situacoes, situacao]
+      }
+    })
+  }
+
   const clearFilters = () => {
     setFilters({
       dateRange: { start: null, end: null },
@@ -54,6 +66,7 @@ export function FilterProvider({ children }) {
       updateSituacoes,
       updateColaboradores,
       updateMatriculas,
+      toggleSituacao,
       clearFilters
     }}>
       {children}

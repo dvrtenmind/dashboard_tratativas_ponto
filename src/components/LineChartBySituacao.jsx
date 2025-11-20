@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { parseISO, format } from 'date-fns'
 import { useChartData } from '../hooks/useChartData'
+import { useFilters } from '../contexts/FilterContext'
 import { exportChartToCSV, exportChartToExcel } from '../utils/exportUtils'
 
 function LineChartBySituacao() {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const { dataGroupedByDateAndSituacao } = useChartData()
+  const { filters, toggleSituacao } = useFilters()
   const [showExportMenu, setShowExportMenu] = useState(false)
 
   const handleExportCSV = () => {
@@ -145,13 +147,19 @@ function LineChartBySituacao() {
 
     // Desenha as linhas
     dataGroupedBySituacao.forEach(({ situacao, values }) => {
+      const isSelected = filters.situacoes.includes(situacao)
       svg.append('path')
         .datum(values)
         .attr('fill', 'none')
         .attr('stroke', colorScale(situacao))
-        .attr('stroke-width', 2)
+        .attr('stroke-width', isSelected ? 4 : 2)
+        .attr('stroke-opacity', isSelected ? 1 : 0.7)
         .attr('d', line)
-        .attr('class', 'hover:stroke-width-3 transition-all')
+        .style('cursor', 'pointer')
+        .on('click', function(event) {
+          event.stopPropagation()
+          toggleSituacao(situacao)
+        })
     })
 
     // Cria tooltip
@@ -241,6 +249,10 @@ function LineChartBySituacao() {
 
           tooltip.style('visibility', 'hidden')
         })
+        .on('click', function(event) {
+          event.stopPropagation()
+          toggleSituacao(situacao)
+        })
     })
 
     // Legenda (horizontal na parte inferior)
@@ -252,27 +264,37 @@ function LineChartBySituacao() {
     situacoes.forEach((situacao, i) => {
       const col = i % itemsPerRow
       const row = Math.floor(i / itemsPerRow)
+      const isSelected = filters.situacoes.includes(situacao)
 
       const legendItem = legend.append('g')
         .attr('transform', `translate(${col * 150}, ${row * 20})`)
+        .style('cursor', 'pointer')
+        .on('click', function(event) {
+          event.stopPropagation()
+          toggleSituacao(situacao)
+        })
 
       legendItem.append('rect')
         .attr('width', 14)
         .attr('height', 14)
         .attr('rx', 2)
         .attr('fill', colorScale(situacao))
+        .attr('stroke', isSelected ? '#3b82f6' : 'none')
+        .attr('stroke-width', isSelected ? 2 : 0)
+        .attr('opacity', isSelected ? 1 : 0.7)
 
       legendItem.append('text')
         .attr('x', 20)
         .attr('y', 11)
         .style('font-size', '11px')
+        .style('font-weight', isSelected ? '600' : '400')
         .attr('class', 'fill-neutral-700 dark:fill-neutral-300')
         .text(situacao.length > 18 ? situacao.substring(0, 18) + '...' : situacao)
         .append('title')
         .text(situacao)
     })
 
-  }, [dataGroupedByDateAndSituacao])
+  }, [dataGroupedByDateAndSituacao, filters.situacoes, toggleSituacao])
 
   if (!dataGroupedByDateAndSituacao || dataGroupedByDateAndSituacao.length === 0) {
     return (

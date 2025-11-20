@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { useChartData } from '../hooks/useChartData'
+import { useFilters } from '../contexts/FilterContext'
 import { exportChartToCSV, exportChartToExcel } from '../utils/exportUtils'
 
 function BarChartBySituacao() {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const { dataGroupedBySituacao } = useChartData()
+  const { filters, toggleSituacao } = useFilters()
   const [showExportMenu, setShowExportMenu] = useState(false)
 
   const handleExportCSV = () => {
@@ -95,8 +97,21 @@ function BarChartBySituacao() {
       .attr('height', y.bandwidth())
       .attr('x', 0)
       .attr('width', d => x(d.total_ocorrencias))
-      .attr('fill', '#737373')
-      .attr('class', 'fill-neutral-500 dark:fill-neutral-400 hover:fill-neutral-600 dark:hover:fill-neutral-300 transition-colors')
+      .attr('fill', d => filters.situacoes.includes(d.situacao) ? '#1f2937' : '#737373')
+      .attr('stroke', d => filters.situacoes.includes(d.situacao) ? '#3b82f6' : 'none')
+      .attr('stroke-width', d => filters.situacoes.includes(d.situacao) ? 2 : 0)
+      .style('cursor', 'pointer')
+      .style('transition', 'all 0.2s')
+      .on('mouseover', function() {
+        d3.select(this).attr('fill', d => filters.situacoes.includes(d.situacao) ? '#111827' : '#525252')
+      })
+      .on('mouseout', function() {
+        d3.select(this).attr('fill', d => filters.situacoes.includes(d.situacao) ? '#1f2937' : '#737373')
+      })
+      .on('click', function(event, d) {
+        event.stopPropagation()
+        toggleSituacao(d.situacao)
+      })
 
     // Labels com ocorrências e horas
     svg.selectAll('.label')
@@ -112,7 +127,7 @@ function BarChartBySituacao() {
       .attr('class', 'fill-neutral-700 dark:fill-neutral-200')
       .text(d => `${d.total_ocorrencias} (${d.soma_horas.toFixed(1)}h)`)
 
-  }, [dataGroupedBySituacao])
+  }, [dataGroupedBySituacao, filters.situacoes, toggleSituacao])
 
   if (!dataGroupedBySituacao || dataGroupedBySituacao.length === 0) {
     return (

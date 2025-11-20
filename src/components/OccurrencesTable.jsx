@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { useData } from '../contexts/DataContext'
+import { useFilters } from '../contexts/FilterContext'
 import { useTableData } from '../hooks/useTableData'
 import { exportTableToExcel } from '../utils/exportTableToExcel'
 
 function OccurrencesTable() {
   const { data: ocorrencias } = useData()
+  const { toggleSituacao, filters } = useFilters()
   const {
     paginatedData,
     currentPage,
@@ -54,6 +56,13 @@ function OccurrencesTable() {
   // Exportação
   const handleExport = () => {
     exportTableToExcel(tableData)
+  }
+
+  // Handler de clique na linha para aplicar filtro
+  const handleRowClick = (item) => {
+    if (item.situacao) {
+      toggleSituacao(item.situacao)
+    }
   }
 
   if (!ocorrencias || ocorrencias.length === 0) {
@@ -124,11 +133,16 @@ function OccurrencesTable() {
                 </td>
               </tr>
             ) : (
-              sortedData.map((item, index) => (
-                <tr
-                  key={item.id || index}
-                  className="border-t border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                >
+              sortedData.map((item, index) => {
+                const isRowSelected = item.situacao && filters.situacoes.includes(item.situacao)
+                return (
+                  <tr
+                    key={item.id || index}
+                    onClick={() => handleRowClick(item)}
+                    className={`border-t border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors ${
+                      isRowSelected ? 'bg-blue-50 dark:bg-blue-950/30' : ''
+                    }`}
+                  >
                   <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
                     {item.data ? format(parseISO(item.data), 'dd/MM/yyyy') : '-'}
                   </td>
@@ -148,7 +162,8 @@ function OccurrencesTable() {
                     {item.justificativa || '-'}
                   </td>
                 </tr>
-              ))
+                )
+              })
             )}
           </tbody>
         </table>

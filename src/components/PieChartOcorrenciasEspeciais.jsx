@@ -186,7 +186,6 @@ function PieChartOcorrenciasEspeciais() {
       .attr('fill', d => d.data.color)
       .attr('stroke', 'white')
       .attr('stroke-width', 2)
-      .style('cursor', 'pointer')
       .on('mouseover', function(event, d) {
         d3.select(this)
           .transition()
