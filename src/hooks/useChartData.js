@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { parseISO } from 'date-fns'
 import { useData } from '../contexts/DataContext'
 import { useFilters } from '../contexts/FilterContext'
 
@@ -13,13 +14,13 @@ export function useChartData() {
     return ocorrencias.filter(item => {
       // Filtro por data
       if (filters.dateRange.start || filters.dateRange.end) {
-        const itemDate = new Date(item.data)
+        const itemDate = parseISO(item.data)
         if (filters.dateRange.start) {
-          const startDate = new Date(filters.dateRange.start)
+          const startDate = parseISO(filters.dateRange.start)
           if (itemDate < startDate) return false
         }
         if (filters.dateRange.end) {
-          const endDate = new Date(filters.dateRange.end)
+          const endDate = parseISO(filters.dateRange.end)
           if (itemDate > endDate) return false
         }
       }
@@ -32,6 +33,22 @@ export function useChartData() {
       // Filtro por colaborador
       if (filters.colaboradores.length > 0) {
         if (!filters.colaboradores.includes(item.id_colaborador)) return false
+      }
+
+      // Filtro por matrícula(s)
+      if (filters.matriculas && filters.matriculas.trim() !== '') {
+        const matriculas = filters.matriculas
+          .split(',')
+          .map(m => m.trim())
+          .filter(m => m !== '')
+
+        if (matriculas.length > 0) {
+          const itemMatricula = (item.id_colaborador || '').toString().toLowerCase()
+          const hasMatch = matriculas.some(m =>
+            itemMatricula.includes(m.toLowerCase())
+          )
+          if (!hasMatch) return false
+        }
       }
 
       return true
@@ -102,7 +119,7 @@ export function useChartData() {
     })
 
     // Converte objeto em array e ordena por data
-    return Object.values(grouped).sort((a, b) => new Date(a.data) - new Date(b.data))
+    return Object.values(grouped).sort((a, b) => parseISO(a.data) - parseISO(b.data))
   }, [filteredData])
 
   return {

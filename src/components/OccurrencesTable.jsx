@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { format, parseISO } from 'date-fns'
 import { useData } from '../contexts/DataContext'
 import { useTableData } from '../hooks/useTableData'
 import { exportTableToExcel } from '../utils/exportTableToExcel'
@@ -91,7 +92,7 @@ function OccurrencesTable() {
       </div>
 
       {/* Tabela com rolagem fixa */}
-      <div className="overflow-auto border border-neutral-200 dark:border-neutral-700 rounded" style={{ maxHeight: '250px' }}>
+      <div className="overflow-auto border border-neutral-200 dark:border-neutral-700 rounded" style={{ maxHeight: '1000px' }}>
         <table className="w-full text-xs">
           <thead className="bg-neutral-100 dark:bg-neutral-800 sticky top-0 z-10">
             <tr>
@@ -129,7 +130,7 @@ function OccurrencesTable() {
                   className="border-t border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                 >
                   <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
-                    {item.data ? new Date(item.data).toLocaleDateString('pt-BR') : '-'}
+                    {item.data ? format(parseISO(item.data), 'dd/MM/yyyy') : '-'}
                   </td>
                   <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
                     {item.nome || '-'}

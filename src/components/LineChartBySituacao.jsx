@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { parseISO, format } from 'date-fns'
 import { useChartData } from '../hooks/useChartData'
 import { exportChartToCSV, exportChartToExcel } from '../utils/exportUtils'
 
@@ -44,7 +45,7 @@ function LineChartBySituacao() {
     const container = containerRef.current
     const containerWidth = container.clientWidth
     const containerHeight = container.clientHeight
-    const margin = { top: 10, right: 120, bottom: 40, left: 50 }
+    const margin = { top: 20, right: 30, bottom: 80, left: 60 }
     const width = containerWidth - margin.left - margin.right
     const height = containerHeight - margin.top - margin.bottom
 
@@ -61,7 +62,7 @@ function LineChartBySituacao() {
       situacao,
       values: dataGroupedByDateAndSituacao
         .filter(d => d.situacao === situacao)
-        .map(d => ({ data: new Date(d.data), total_ocorrencias: d.total_ocorrencias }))
+        .map(d => ({ data: parseISO(d.data), total_ocorrencias: d.total_ocorrencias }))
         .sort((a, b) => a.data - b.data)
     }))
 
@@ -71,7 +72,14 @@ function LineChartBySituacao() {
       .range(d3.schemeCategory10)
 
     // Escalas
-    const allDates = dataGroupedByDateAndSituacao.map(d => new Date(d.data))
+    const allDates = dataGroupedByDateAndSituacao.map(d => parseISO(d.data))
+
+    // Usa as strings de data únicas do banco (já vêm corretas)
+    const uniqueDateStrings = [...new Set(dataGroupedByDateAndSituacao.map(d => d.data))]
+    const uniqueDates = uniqueDateStrings
+      .map(dateStr => parseISO(dateStr))
+      .sort((a, b) => a - b)
+
     const x = d3.scaleTime()
       .domain(d3.extent(allDates))
       .range([0, width])
@@ -82,29 +90,50 @@ function LineChartBySituacao() {
       .nice()
       .range([height, 0])
 
-    // Eixo X (datas)
-    svg.append('g')
+    // Eixo X (datas) - exibe todas as datas sem pular
+    const xAxis = svg.append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat('%d/%m')))
-      .selectAll('text')
-      .style('font-size', '11px')
+      .call(d3.axisBottom(x).tickValues(uniqueDates).tickFormat(d3.timeFormat('%d/%m')))
+
+    xAxis.selectAll('text')
+      .style('font-size', '12px')
+      .style('font-weight', '500')
       .attr('class', 'fill-neutral-700 dark:fill-neutral-300')
+      .attr('transform', 'rotate(-45)')
+      .style('text-anchor', 'end')
+      .attr('dx', '-0.5em')
+      .attr('dy', '0.5em')
+
+    xAxis.selectAll('line')
+      .attr('class', 'stroke-neutral-300 dark:stroke-neutral-700')
+
+    xAxis.select('.domain')
+      .attr('class', 'stroke-neutral-300 dark:stroke-neutral-700')
 
     // Eixo Y (ocorrências)
-    svg.append('g')
-      .call(d3.axisLeft(y).ticks(5))
-      .selectAll('text')
-      .style('font-size', '11px')
+    const yAxis = svg.append('g')
+      .call(d3.axisLeft(y).ticks(6))
+
+    yAxis.selectAll('text')
+      .style('font-size', '12px')
+      .style('font-weight', '500')
       .attr('class', 'fill-neutral-700 dark:fill-neutral-300')
+
+    yAxis.selectAll('line')
+      .attr('class', 'stroke-neutral-300 dark:stroke-neutral-700')
+
+    yAxis.select('.domain')
+      .attr('class', 'stroke-neutral-300 dark:stroke-neutral-700')
 
     // Label do eixo Y
     svg.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('y', -margin.left + 10)
+      .attr('y', -margin.left + 15)
       .attr('x', -(height / 2))
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
-      .style('font-size', '11px')
+      .style('font-size', '13px')
+      .style('font-weight', '600')
       .attr('class', 'fill-neutral-700 dark:fill-neutral-300')
       .text('Total de Ocorrências')
 
@@ -130,21 +159,23 @@ function LineChartBySituacao() {
       .append('div')
       .style('position', 'absolute')
       .style('visibility', 'hidden')
-      .style('background-color', 'rgba(0, 0, 0, 0.8)')
+      .style('background-color', 'rgba(0, 0, 0, 0.85)')
       .style('color', 'white')
-      .style('padding', '8px 12px')
-      .style('border-radius', '6px')
-      .style('font-size', '12px')
+      .style('padding', '12px 16px')
+      .style('border-radius', '8px')
+      .style('font-size', '14px')
+      .style('line-height', '1.6')
       .style('pointer-events', 'none')
       .style('z-index', '1000')
-      .style('box-shadow', '0 2px 4px rgba(0,0,0,0.2)')
+      .style('box-shadow', '0 4px 8px rgba(0,0,0,0.3)')
+      .style('max-width', '220px')
 
     // Adiciona pontos nas linhas com tooltip
     dataGroupedBySituacao.forEach(({ situacao, values }) => {
       // Busca os dados originais com horas para o tooltip
       const valuesWithHours = values.map(v => {
         const originalData = dataGroupedByDateAndSituacao.find(
-          d => d.situacao === situacao && new Date(d.data).getTime() === v.data.getTime()
+          d => d.situacao === situacao && parseISO(d.data).getTime() === v.data.getTime()
         )
         return {
           ...v,
@@ -172,18 +203,35 @@ function LineChartBySituacao() {
           tooltip
             .style('visibility', 'visible')
             .html(`
-              <div>
-                <strong>${situacao}</strong><br/>
-                Data: ${d.data.toLocaleDateString('pt-BR')}<br/>
-                Ocorrências: ${d.total_ocorrencias}<br/>
-                Horas: ${d.soma_horas.toFixed(2)}h
-              </div>
+              <div style="font-weight: 600; margin-bottom: 6px; font-size: 15px;">${situacao}</div>
+              <div style="margin-bottom: 3px;"><span style="color: #9ca3af;">Data:</span> ${format(d.data, 'dd/MM/yyyy')}</div>
+              <div style="margin-bottom: 3px;"><span style="color: #9ca3af;">Ocorrências:</span> <strong>${d.total_ocorrencias}</strong></div>
+              <div><span style="color: #9ca3af;">Horas:</span> <strong>${d.soma_horas.toFixed(2)}h</strong></div>
             `)
         })
         .on('mousemove', function(event) {
+          const tooltipNode = tooltip.node()
+          const tooltipWidth = tooltipNode.offsetWidth
+          const tooltipHeight = tooltipNode.offsetHeight
+          const containerRect = container.getBoundingClientRect()
+
+          // Calcula posição evitando sair da tela
+          let left = event.pageX + 15
+          let top = event.pageY - 10
+
+          // Ajusta se passar da borda direita
+          if (left + tooltipWidth > window.innerWidth - 20) {
+            left = event.pageX - tooltipWidth - 15
+          }
+
+          // Ajusta se passar da borda inferior
+          if (top + tooltipHeight > window.innerHeight - 20) {
+            top = event.pageY - tooltipHeight - 10
+          }
+
           tooltip
-            .style('top', (event.pageY - 10) + 'px')
-            .style('left', (event.pageX + 10) + 'px')
+            .style('top', top + 'px')
+            .style('left', left + 'px')
         })
         .on('mouseout', function() {
           d3.select(this)
@@ -195,25 +243,31 @@ function LineChartBySituacao() {
         })
     })
 
-    // Legenda
+    // Legenda (horizontal na parte inferior)
     const legend = svg.append('g')
-      .attr('transform', `translate(${width + 10}, 0)`)
+      .attr('transform', `translate(0, ${height + 50})`)
+
+    const itemsPerRow = Math.max(1, Math.floor(width / 150)) // Calcula quantos itens cabem por linha
 
     situacoes.forEach((situacao, i) => {
-      const legendRow = legend.append('g')
-        .attr('transform', `translate(0, ${i * 18})`)
+      const col = i % itemsPerRow
+      const row = Math.floor(i / itemsPerRow)
 
-      legendRow.append('rect')
-        .attr('width', 12)
-        .attr('height', 12)
+      const legendItem = legend.append('g')
+        .attr('transform', `translate(${col * 150}, ${row * 20})`)
+
+      legendItem.append('rect')
+        .attr('width', 14)
+        .attr('height', 14)
+        .attr('rx', 2)
         .attr('fill', colorScale(situacao))
 
-      legendRow.append('text')
-        .attr('x', 18)
-        .attr('y', 10)
-        .style('font-size', '10px')
+      legendItem.append('text')
+        .attr('x', 20)
+        .attr('y', 11)
+        .style('font-size', '11px')
         .attr('class', 'fill-neutral-700 dark:fill-neutral-300')
-        .text(situacao.length > 15 ? situacao.substring(0, 15) + '...' : situacao)
+        .text(situacao.length > 18 ? situacao.substring(0, 18) + '...' : situacao)
         .append('title')
         .text(situacao)
     })

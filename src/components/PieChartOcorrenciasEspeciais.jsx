@@ -134,7 +134,7 @@ function PieChartOcorrenciasEspeciais() {
     const container = containerRef.current
     const containerWidth = container.clientWidth
     const containerHeight = container.clientHeight
-    const margin = { top: 20, right: 150, bottom: 20, left: 20 }
+    const margin = { top: 20, right: 120, bottom: 20, left: 20 }
     const width = containerWidth - margin.left - margin.right
     const height = containerHeight - margin.top - margin.bottom
     const radius = Math.min(width, height) / 2.5

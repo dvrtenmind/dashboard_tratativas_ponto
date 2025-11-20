@@ -23,9 +23,9 @@ function ChartPlaceholders() {
   )
 
   return (
-    <div className="grid grid-rows-[340px_350px_400px] gap-3">
+    <div className="grid grid-rows-[340px_550px_1100px] gap-3 sm:gap-4">
       {/* Linha superior - 2 gráficos */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <BarChartBySituacao />
         <PieChartOcorrenciasEspeciais />
       </div>

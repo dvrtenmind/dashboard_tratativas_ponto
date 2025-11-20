@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useData } from '../contexts/DataContext'
 import { useFilters } from '../contexts/FilterContext'
 import * as XLSX from 'xlsx'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 
 export function useExport() {
   const [isExporting, setIsExporting] = useState(false)
@@ -16,13 +16,13 @@ export function useExport() {
     return ocorrencias.filter(item => {
       // Filtro por data
       if (filters.dateRange.start || filters.dateRange.end) {
-        const itemDate = new Date(item.data)
+        const itemDate = parseISO(item.data)
         if (filters.dateRange.start) {
-          const startDate = new Date(filters.dateRange.start)
+          const startDate = parseISO(filters.dateRange.start)
           if (itemDate < startDate) return false
         }
         if (filters.dateRange.end) {
-          const endDate = new Date(filters.dateRange.end)
+          const endDate = parseISO(filters.dateRange.end)
           if (itemDate > endDate) return false
         }
       }
@@ -35,6 +35,22 @@ export function useExport() {
       // Filtro por colaborador
       if (filters.colaboradores.length > 0) {
         if (!filters.colaboradores.includes(item.id_colaborador)) return false
+      }
+
+      // Filtro por matrícula(s)
+      if (filters.matriculas && filters.matriculas.trim() !== '') {
+        const matriculas = filters.matriculas
+          .split(',')
+          .map(m => m.trim())
+          .filter(m => m !== '')
+
+        if (matriculas.length > 0) {
+          const itemMatricula = (item.id_colaborador || '').toString().toLowerCase()
+          const hasMatch = matriculas.some(m =>
+            itemMatricula.includes(m.toLowerCase())
+          )
+          if (!hasMatch) return false
+        }
       }
 
       return true

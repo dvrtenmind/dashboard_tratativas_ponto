@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext'
 import { useState, useEffect } from 'react'
 
 function Sidebar() {
-  const { filters, updateDateRange, updateSituacoes, updateColaboradores, clearFilters } = useFilters()
+  const { filters, updateDateRange, updateSituacoes, updateColaboradores, updateMatriculas, clearFilters } = useFilters()
   const { data: ocorrencias } = useData()
 
   const [startDate, setStartDate] = useState('')
@@ -11,6 +11,7 @@ function Sidebar() {
   const [situacoesList, setSituacoesList] = useState([])
   const [colaboradoresList, setColaboradoresList] = useState([])
   const [searchColaborador, setSearchColaborador] = useState('')
+  const [matriculaFilter, setMatriculaFilter] = useState('')
 
   // Extrai valores únicos dos dados para os filtros
   useEffect(() => {
@@ -88,6 +89,26 @@ function Sidebar() {
           </div>
         </div>
 
+        {/* Filtro por Matrícula */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            Matrícula
+          </h3>
+          <input
+            type="text"
+            value={matriculaFilter}
+            onChange={(e) => {
+              setMatriculaFilter(e.target.value)
+              updateMatriculas(e.target.value)
+            }}
+            placeholder="Ex: 12345, 67890, 98765"
+            className="w-full px-3 py-2 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-600 text-neutral-900 dark:text-neutral-50"
+          />
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            Separe múltiplas matrículas por vírgula
+          </p>
+        </div>
+
         {/* Filtro por Situação/Ocorrência */}
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -143,6 +164,10 @@ function Sidebar() {
         <button
           onClick={() => {
             clearFilters()
+            setStartDate('')
+            setEndDate('')
+            setSearchColaborador('')
+            setMatriculaFilter('')
           }}
           className="w-full px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
         >

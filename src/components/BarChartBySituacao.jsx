@@ -39,7 +39,7 @@ function BarChartBySituacao() {
     const container = containerRef.current
     const containerWidth = container.clientWidth
     const containerHeight = container.clientHeight
-    const margin = { top: 5, right: 80, bottom: 30, left: 200 }
+    const margin = { top: 5, right: 60, bottom: 30, left: 150 }
     const width = containerWidth - margin.left - margin.right
     const height = containerHeight - margin.top - margin.bottom
 

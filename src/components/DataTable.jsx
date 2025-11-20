@@ -14,13 +14,13 @@ function DataTable() {
     return ocorrencias.filter(item => {
       // Filtro por data
       if (filters.dateRange.start || filters.dateRange.end) {
-        const itemDate = new Date(item.data)
+        const itemDate = parseISO(item.data)
         if (filters.dateRange.start) {
-          const startDate = new Date(filters.dateRange.start)
+          const startDate = parseISO(filters.dateRange.start)
           if (itemDate < startDate) return false
         }
         if (filters.dateRange.end) {
-          const endDate = new Date(filters.dateRange.end)
+          const endDate = parseISO(filters.dateRange.end)
           if (itemDate > endDate) return false
         }
       }

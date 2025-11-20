@@ -6,7 +6,8 @@ export function FilterProvider({ children }) {
   const [filters, setFilters] = useState({
     dateRange: { start: null, end: null },
     situacoes: [],
-    colaboradores: []
+    colaboradores: [],
+    matriculas: ''
   })
 
   const updateDateRange = (start, end) => {
@@ -30,11 +31,19 @@ export function FilterProvider({ children }) {
     }))
   }
 
+  const updateMatriculas = (matriculas) => {
+    setFilters(prev => ({
+      ...prev,
+      matriculas
+    }))
+  }
+
   const clearFilters = () => {
     setFilters({
       dateRange: { start: null, end: null },
       situacoes: [],
-      colaboradores: []
+      colaboradores: [],
+      matriculas: ''
     })
   }
 
@@ -44,6 +53,7 @@ export function FilterProvider({ children }) {
       updateDateRange,
       updateSituacoes,
       updateColaboradores,
+      updateMatriculas,
       clearFilters
     }}>
       {children}
