@@ -144,6 +144,24 @@ export const exportTableToExcel = (allData) => {
     })
   }
 
+  // 2.5. Débito BH
+  const debitosBH = allData.filter(item => {
+    const situacao = (item.situacao || '').toLowerCase()
+    return situacao.includes('débito')
+  })
+
+  if (debitosBH.length > 0) {
+    const worksheet = XLSX.utils.json_to_sheet(debitosBH)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Débito BH')
+
+    const totais = calcularTotais(debitosBH)
+    resumoData.push({
+      'Aba': 'Débito BH',
+      'Total de Ocorrências': totais.total_ocorrencias,
+      'Total de Horas': totais.soma_horas.toFixed(2)
+    })
+  }
+
   // 3. Aba "Resumo" - Totais de cada aba
   const resumoWorksheet = XLSX.utils.json_to_sheet(resumoData)
   XLSX.utils.book_append_sheet(workbook, resumoWorksheet, 'Resumo')
