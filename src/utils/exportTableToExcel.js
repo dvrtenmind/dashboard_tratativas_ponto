@@ -144,10 +144,12 @@ export const exportTableToExcel = (allData) => {
     })
   }
 
-  // 2.5. Débito BH
+  // 2.5. Débito BH (sem marcação de entrada e saída)
   const debitosBH = allData.filter(item => {
     const situacao = (item.situacao || '').toLowerCase()
-    return situacao.includes('débito')
+    const isDebitoBH = situacao.includes('débito') && situacao.includes('bh')
+    const semMarcacao = !item.inicio && !item.termino
+    return isDebitoBH && semMarcacao
   })
 
   if (debitosBH.length > 0) {
