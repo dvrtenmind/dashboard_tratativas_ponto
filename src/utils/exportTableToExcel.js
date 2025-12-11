@@ -24,6 +24,133 @@ export const exportTableToExcel = (allData) => {
     return { total_ocorrencias, soma_horas }
   }
 
+  // Utility functions for workday compatibility checking
+  const parseTimeToMinutes = (timeString) => {
+    if (!timeString || typeof timeString !== 'string') return null
+
+    try {
+      const parts = timeString.trim().split(':')
+      if (parts.length < 2) return null
+
+      const hours = parseInt(parts[0], 10)
+      const minutes = parseInt(parts[1], 10)
+
+      if (isNaN(hours) || isNaN(minutes)) return null
+
+      return hours * 60 + minutes
+    } catch (e) {
+      return null
+    }
+  }
+
+  const calculateTimeDifference = (startTime, endTime) => {
+    const startMinutes = parseTimeToMinutes(startTime)
+    const endMinutes = parseTimeToMinutes(endTime)
+
+    if (startMinutes === null || endMinutes === null) return null
+
+    let diff = endMinutes - startMinutes
+
+    // Handle overnight shifts (crossing midnight)
+    if (diff < 0) {
+      diff += 24 * 60  // Add 24 hours
+    }
+
+    return diff
+  }
+
+  const parseEscalaHours = (escala) => {
+    if (!escala || typeof escala !== 'string') return null
+
+    try {
+      // Extract time component: "22:00/04:00-6X1-OP-180" -> "22:00/04:00"
+      const timePart = escala.split('-')[0].trim()
+
+      // Split by "/" to get [startTime, endTime]
+      const times = timePart.split('/')
+
+      if (times.length !== 2) return null
+
+      return calculateTimeDifference(times[0].trim(), times[1].trim())
+    } catch (e) {
+      return null
+    }
+  }
+
+  const parseDescricaoHorarioHours = (descricaoHorario) => {
+    if (!descricaoHorario || typeof descricaoHorario !== 'string') return null
+
+    try {
+      const normalized = descricaoHorario.toLowerCase().trim()
+
+      // Exclude Folga and DSR records
+      if (normalized.includes('folga') || normalized.includes('dsr')) {
+        return null
+      }
+
+      // Remove "AS" separator (case-insensitive)
+      const cleaned = descricaoHorario.replace(/\s+as\s+/gi, ' ')
+
+      // Extract all time components (HH:MM format)
+      const timeRegex = /\d{1,2}:\d{2}/g
+      const times = cleaned.match(timeRegex)
+
+      if (!times) return null
+
+      if (times.length === 2) {
+        // Format: "05:00 11:00" (start, end)
+        return calculateTimeDifference(times[0], times[1])
+      } else if (times.length === 4) {
+        // Format: "05:00 11:00 12:00 18:00" (morning + afternoon)
+        const morningMinutes = calculateTimeDifference(times[0], times[1])
+        const afternoonMinutes = calculateTimeDifference(times[2], times[3])
+
+        if (morningMinutes === null || afternoonMinutes === null) return null
+
+        return morningMinutes + afternoonMinutes
+      } else {
+        return null  // Invalid format
+      }
+    } catch (e) {
+      return null
+    }
+  }
+
+  const isIncompatibleWorkday = (record) => {
+    const escalaMinutes = parseEscalaHours(record.escala)
+    const descricaoMinutes = parseDescricaoHorarioHours(record.descricao_horario)
+
+    // If either cannot be parsed, cannot determine incompatibility
+    if (escalaMinutes === null || descricaoMinutes === null) {
+      return false
+    }
+
+    // Calculate the difference
+    const diffMinutes = Math.abs(escalaMinutes - descricaoMinutes)
+
+    // Check if difference matches lunch break rules
+    // For 6-hour shifts: 15 minutes lunch
+    // For 8+ hour shifts: 60 minutes lunch
+
+    // If exactly equal, it's compatible
+    if (diffMinutes === 0) {
+      return false
+    }
+
+    // For 6-hour shifts (360 minutes), 15-minute lunch is acceptable
+    if (escalaMinutes === 360 && diffMinutes === 15) {
+      return false  // Compatible - valid lunch break
+    }
+
+    // For 8+ hour shifts (480+ minutes), 60-minute lunch is acceptable
+    if (escalaMinutes >= 480 && diffMinutes === 60) {
+      return false  // Compatible - valid lunch break
+    }
+
+    // Any other difference is incompatible
+    return true
+  }
+
   const resumoData = []
 
   // 1. Aba "Dados" - Todos os registros filtrados
@@ -159,6 +286,45 @@ export const exportTableToExcel = (allData) => {
     const totais = calcularTotais(debitosBH)
     resumoData.push({
       'Aba': 'Débito BH',
+      'Total de Ocorrências': totais.total_ocorrencias,
+      'Total de Horas': totais.soma_horas.toFixed(2)
+    })
+  }
+
+  // 2.6. Incompatibilidade de Jornada
+  const incompatibilidades = allData.filter(item => isIncompatibleWorkday(item))
+
+  if (incompatibilidades.length > 0) {
+    // Remove duplicados baseado em id_colaborador + data
+    // Mantém apenas o primeiro registro de cada combinação
+    const seen = new Set()
+    const incompatibilidadesUnicas = incompatibilidades.filter(item => {
+      const key = `${item.id_colaborador}|${item.data}`
+      if (seen.has(key)) {
+        return false  // Duplicado, remover
+      }
+      seen.add(key)
+      return true  // Primeiro registro desta chave, manter
+    })
+
+    // Enrich data with calculated values for transparency
+    const enrichedData = incompatibilidadesUnicas.map(item => {
+      const escalaMinutes = parseEscalaHours(item.escala)
+      const descricaoMinutes = parseDescricaoHorarioHours(item.descricao_horario)
+
+      return {
+        ...item,
+        horas_calculadas_escala: escalaMinutes !== null ? (escalaMinutes / 60).toFixed(2) : 'N/A',
+        horas_calculadas_descricao: descricaoMinutes !== null ? (descricaoMinutes / 60).toFixed(2) : 'N/A'
+      }
+    })
+
+    const worksheet = XLSX.utils.json_to_sheet(enrichedData)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Incompatibilidade Jornada')
+
+    const totais = calcularTotais(incompatibilidadesUnicas)
+    resumoData.push({
+      'Aba': 'Incompatibilidade Jornada',
       'Total de Ocorrências': totais.total_ocorrencias,
       'Total de Horas': totais.soma_horas.toFixed(2)
     })
