@@ -28,6 +28,7 @@ export function DataProvider({ children }) {
           .from(TABLE_NAME)
           .select('*')
           .order('data', { ascending: false })
+          .order('id_registro', { ascending: false })
           .range(from, from + batchSize - 1)
 
         if (fetchError) {
