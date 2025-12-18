@@ -365,6 +365,98 @@ export const exportTableToExcel = (allData) => {
     })
   }
 
+  // 2.7. Abandonos - Colaboradores com mais de 10 dias consecutivos de falta
+  const faltas = allData.filter(item => {
+    const situacao = (item.situacao || '').toLowerCase()
+    return situacao.includes('falta')
+  })
+
+  // Função para calcular a maior sequência de dias consecutivos de falta por colaborador
+  const calcularFaltasConsecutivas = (faltasColaborador) => {
+    if (faltasColaborador.length === 0) return { maiorSequencia: 0, datasSequencia: [] }
+
+    // Extrair datas únicas e ordenar
+    const datasUnicas = [...new Set(faltasColaborador.map(item => item.data))]
+      .map(data => new Date(data))
+      .sort((a, b) => a - b)
+
+    if (datasUnicas.length === 0) return { maiorSequencia: 0, datasSequencia: [] }
+
+    let maiorSequencia = 1
+    let sequenciaAtual = 1
+    let inicioMaiorSequencia = 0
+    let inicioSequenciaAtual = 0
+
+    for (let i = 1; i < datasUnicas.length; i++) {
+      const diffDias = Math.round((datasUnicas[i] - datasUnicas[i - 1]) / (1000 * 60 * 60 * 24))
+
+      if (diffDias === 1) {
+        sequenciaAtual++
+        if (sequenciaAtual > maiorSequencia) {
+          maiorSequencia = sequenciaAtual
+          inicioMaiorSequencia = inicioSequenciaAtual
+        }
+      } else {
+        sequenciaAtual = 1
+        inicioSequenciaAtual = i
+      }
+    }
+
+    // Pegar as datas da maior sequência
+    const datasSequencia = datasUnicas.slice(inicioMaiorSequencia, inicioMaiorSequencia + maiorSequencia)
+
+    return { maiorSequencia, datasSequencia }
+  }
+
+  // Agrupar faltas por colaborador
+  const faltasPorColaborador = {}
+  faltas.forEach(item => {
+    if (!faltasPorColaborador[item.id_colaborador]) {
+      faltasPorColaborador[item.id_colaborador] = {
+        id_colaborador: item.id_colaborador,
+        nome: item.nome,
+        base: item.base || 'Sem Base',
+        faltas: []
+      }
+    }
+    faltasPorColaborador[item.id_colaborador].faltas.push(item)
+  })
+
+  // Identificar colaboradores com mais de 10 dias consecutivos de falta
+  const abandonos = []
+  Object.values(faltasPorColaborador).forEach(colab => {
+    const { maiorSequencia, datasSequencia } = calcularFaltasConsecutivas(colab.faltas)
+
+    if (maiorSequencia > 10) {
+      const dataInicio = datasSequencia.length > 0 ? format(datasSequencia[0], 'dd/MM/yyyy') : ''
+      const dataFim = datasSequencia.length > 0 ? format(datasSequencia[datasSequencia.length - 1], 'dd/MM/yyyy') : ''
+
+      abandonos.push({
+        'id_colaborador': colab.id_colaborador,
+        'nome': colab.nome,
+        'base': colab.base,
+        'dias_consecutivos': maiorSequencia,
+        'data_inicio': dataInicio,
+        'data_fim': dataFim,
+        'total_faltas': colab.faltas.length
+      })
+    }
+  })
+
+  // Ordenar por dias consecutivos (maior primeiro)
+  abandonos.sort((a, b) => b.dias_consecutivos - a.dias_consecutivos)
+
+  if (abandonos.length > 0) {
+    const worksheet = XLSX.utils.json_to_sheet(abandonos)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Abandonos')
+
+    resumoData.push({
+      'Aba': 'Abandonos',
+      'Total de Ocorrências': abandonos.length,
+      'Total de Horas': '-'
+    })
+  }
+
   // 3. Aba "Ocorrências por Colaborador" - Resumo por colaborador
   const colaboradoresMap = new Map()
 
