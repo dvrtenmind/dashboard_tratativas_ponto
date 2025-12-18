@@ -18,7 +18,7 @@ function Header() {
             Dashboard de Ocorrências
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            Controle de Ponto {user?.email && `• ${user.email}`}
+            Controle de Ponto {user?.email && `• ${user.email}`} • Criado por Matheus de Oliveira Ferreira
           </p>
         </div>
 
