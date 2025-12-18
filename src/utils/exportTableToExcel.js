@@ -371,13 +371,38 @@ export const exportTableToExcel = (allData) => {
     return situacao.includes('falta')
   })
 
+  // Função auxiliar para verificar se os dias intermediários são folga (sem registro)
+  const diasIntermediariosSaoFolga = (dataAnterior, dataAtual, registrosColaborador) => {
+    const umDia = 1000 * 60 * 60 * 24
+    const dataInicio = new Date(dataAnterior.getTime() + umDia)
+    const dataFim = new Date(dataAtual.getTime())
+
+    // Criar set de datas com registro
+    const datasComRegistro = new Set(registrosColaborador.map(reg => reg.data))
+
+    // Verificar cada dia intermediário
+    let dataAtualCheck = new Date(dataInicio)
+    while (dataAtualCheck < dataFim) {
+      const dataStr = dataAtualCheck.toISOString().split('T')[0]
+
+      // Se há registro para este dia, quebra a sequência
+      if (datasComRegistro.has(dataStr)) {
+        return false
+      }
+
+      dataAtualCheck = new Date(dataAtualCheck.getTime() + umDia)
+    }
+
+    return true // Nenhum dia intermediário tem registro - continua sequência
+  }
+
   // Função para calcular a maior sequência de dias consecutivos de falta por colaborador
-  const calcularFaltasConsecutivas = (faltasColaborador) => {
+  const calcularFaltasConsecutivas = (faltasColaborador, todosRegistrosColaborador) => {
     if (faltasColaborador.length === 0) return { maiorSequencia: 0, datasSequencia: [] }
 
-    // Extrair datas únicas e ordenar
+    // Extrair datas únicas e ordenar (adiciona T00:00:00 para evitar problema de fuso horário)
     const datasUnicas = [...new Set(faltasColaborador.map(item => item.data))]
-      .map(data => new Date(data))
+      .map(data => new Date(data + 'T00:00:00'))
       .sort((a, b) => a - b)
 
     if (datasUnicas.length === 0) return { maiorSequencia: 0, datasSequencia: [] }
@@ -391,14 +416,24 @@ export const exportTableToExcel = (allData) => {
       const diffDias = Math.round((datasUnicas[i] - datasUnicas[i - 1]) / (1000 * 60 * 60 * 24))
 
       if (diffDias === 1) {
+        // Dias consecutivos diretos
         sequenciaAtual++
         if (sequenciaAtual > maiorSequencia) {
           maiorSequencia = sequenciaAtual
           inicioMaiorSequencia = inicioSequenciaAtual
         }
-      } else {
-        sequenciaAtual = 1
-        inicioSequenciaAtual = i
+      } else if (diffDias > 1) {
+        // Verificar se os dias intermediários são DSR ou Folga
+        if (diasIntermediariosSaoFolga(datasUnicas[i - 1], datasUnicas[i], todosRegistrosColaborador)) {
+          sequenciaAtual++
+          if (sequenciaAtual > maiorSequencia) {
+            maiorSequencia = sequenciaAtual
+            inicioMaiorSequencia = inicioSequenciaAtual
+          }
+        } else {
+          sequenciaAtual = 1
+          inicioSequenciaAtual = i
+        }
       }
     }
 
@@ -407,6 +442,15 @@ export const exportTableToExcel = (allData) => {
 
     return { maiorSequencia, datasSequencia }
   }
+
+  // Agrupar todos os dados por colaborador (para verificar DSR/Folga nos dias intermediários)
+  const todosDadosPorColaborador = {}
+  allData.forEach(item => {
+    if (!todosDadosPorColaborador[item.id_colaborador]) {
+      todosDadosPorColaborador[item.id_colaborador] = []
+    }
+    todosDadosPorColaborador[item.id_colaborador].push(item)
+  })
 
   // Agrupar faltas por colaborador
   const faltasPorColaborador = {}
@@ -425,7 +469,8 @@ export const exportTableToExcel = (allData) => {
   // Identificar colaboradores com mais de 10 dias consecutivos de falta
   const abandonos = []
   Object.values(faltasPorColaborador).forEach(colab => {
-    const { maiorSequencia, datasSequencia } = calcularFaltasConsecutivas(colab.faltas)
+    const todosRegistros = todosDadosPorColaborador[colab.id_colaborador] || []
+    const { maiorSequencia, datasSequencia } = calcularFaltasConsecutivas(colab.faltas, todosRegistros)
 
     if (maiorSequencia > 10) {
       const dataInicio = datasSequencia.length > 0 ? format(datasSequencia[0], 'dd/MM/yyyy') : ''
