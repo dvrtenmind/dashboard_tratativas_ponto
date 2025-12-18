@@ -352,7 +352,117 @@ export const exportTableToExcel = (allData) => {
     })
   }
 
-  // 3. Aba "Resumo" - Totais de cada aba
+  // 3. Aba "Ocorrências por Colaborador" - Resumo por colaborador
+  const colaboradoresMap = new Map()
+
+  allData.forEach(item => {
+    if (!colaboradoresMap.has(item.id_colaborador)) {
+      colaboradoresMap.set(item.id_colaborador, {
+        id_colaborador: item.id_colaborador,
+        nome: item.nome,
+        base: item.base || 'Sem Base'
+      })
+    }
+  })
+
+  const contarPorColaborador = (data) => {
+    const contagem = {}
+    data.forEach(item => {
+      contagem[item.id_colaborador] = (contagem[item.id_colaborador] || 0) + 1
+    })
+    return contagem
+  }
+
+  const contagemMarcacoes = contarPorColaborador(marcacoesInvalidas)
+  const contagemDebitoCredito = contarPorColaborador(debitoCreditoMesmoDia)
+  const contagemHorasExtras = contarPorColaborador(horasExtras6h)
+  const contagemFolgas = contarPorColaborador(folgasTrabalhadas)
+  const contagemDebitoBH = contarPorColaborador(debitosBH)
+  const contagemIncompatibilidade = contarPorColaborador(incompatibilidades)
+
+  const ocorrenciasPorColaborador = Array.from(colaboradoresMap.values()).map(colab => {
+    const marcacoes = contagemMarcacoes[colab.id_colaborador] || 0
+    const debitoCredito = contagemDebitoCredito[colab.id_colaborador] || 0
+    const horasExtras = contagemHorasExtras[colab.id_colaborador] || 0
+    const folgas = contagemFolgas[colab.id_colaborador] || 0
+    const debitoBH = contagemDebitoBH[colab.id_colaborador] || 0
+    const incompatibilidade = contagemIncompatibilidade[colab.id_colaborador] || 0
+
+    const total = marcacoes + debitoCredito + horasExtras + folgas + debitoBH + incompatibilidade
+
+    return {
+      'id_colaborador': colab.id_colaborador,
+      'nome': colab.nome,
+      'base': colab.base,
+      'Marcações Inválidas': marcacoes,
+      'Débito e Crédito': debitoCredito,
+      'Horas Extras +6h': horasExtras,
+      'Folgas Trabalhadas': folgas,
+      'Débito BH': debitoBH,
+      'Incompatibilidade Jornada': incompatibilidade,
+      'Total': total
+    }
+  })
+
+  ocorrenciasPorColaborador.sort((a, b) => b.Total - a.Total)
+
+  if (ocorrenciasPorColaborador.length > 0) {
+    const ocorrenciasWorksheet = XLSX.utils.json_to_sheet(ocorrenciasPorColaborador)
+    XLSX.utils.book_append_sheet(workbook, ocorrenciasWorksheet, 'Ocorrências por Colaborador')
+  }
+
+  // 4. Aba "Ocorrências por Base" - Resumo por base
+  const basesSet = new Set()
+  allData.forEach(item => {
+    basesSet.add(item.base || 'Sem Base')
+  })
+
+  const contarPorBase = (data) => {
+    const contagem = {}
+    data.forEach(item => {
+      const base = item.base || 'Sem Base'
+      contagem[base] = (contagem[base] || 0) + 1
+    })
+    return contagem
+  }
+
+  const contagemMarcacoesBase = contarPorBase(marcacoesInvalidas)
+  const contagemDebitoCreditoBase = contarPorBase(debitoCreditoMesmoDia)
+  const contagemHorasExtrasBase = contarPorBase(horasExtras6h)
+  const contagemFolgasBase = contarPorBase(folgasTrabalhadas)
+  const contagemDebitoBHBase = contarPorBase(debitosBH)
+  const contagemIncompatibilidadeBase = contarPorBase(incompatibilidades)
+
+  const ocorrenciasPorBase = Array.from(basesSet).map(base => {
+    const marcacoes = contagemMarcacoesBase[base] || 0
+    const debitoCredito = contagemDebitoCreditoBase[base] || 0
+    const horasExtras = contagemHorasExtrasBase[base] || 0
+    const folgas = contagemFolgasBase[base] || 0
+    const debitoBH = contagemDebitoBHBase[base] || 0
+    const incompatibilidade = contagemIncompatibilidadeBase[base] || 0
+
+    const total = marcacoes + debitoCredito + horasExtras + folgas + debitoBH + incompatibilidade
+
+    return {
+      'base': base,
+      'Marcações Inválidas': marcacoes,
+      'Débito e Crédito': debitoCredito,
+      'Horas Extras +6h': horasExtras,
+      'Folgas Trabalhadas': folgas,
+      'Débito BH': debitoBH,
+      'Incompatibilidade Jornada': incompatibilidade,
+      'Total': total
+    }
+  })
+
+  ocorrenciasPorBase.sort((a, b) => b.Total - a.Total)
+
+  if (ocorrenciasPorBase.length > 0) {
+    const ocorrenciasBaseWorksheet = XLSX.utils.json_to_sheet(ocorrenciasPorBase)
+    XLSX.utils.book_append_sheet(workbook, ocorrenciasBaseWorksheet, 'Ocorrências por Base')
+  }
+
+  // 5. Aba "Resumo" - Totais de cada aba
   const resumoWorksheet = XLSX.utils.json_to_sheet(resumoData)
   XLSX.utils.book_append_sheet(workbook, resumoWorksheet, 'Resumo')
 
