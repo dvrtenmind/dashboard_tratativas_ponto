@@ -44,7 +44,42 @@ export function DataProvider({ children }) {
         }
       }
 
-      setData(allData)
+      // Busca TODOS os ativos com paginação (Supabase limita a 1000 por query)
+      let allAtivos = []
+      let ativosFrom = 0
+      let ativosHasMore = true
+
+      while (ativosHasMore) {
+        const { data: ativosBatch, error: ativosError } = await supabase
+          .from('ativos')
+          .select('id, base')
+          .range(ativosFrom, ativosFrom + batchSize - 1)
+
+        if (ativosError) {
+          console.warn('Erro ao buscar ativos:', ativosError)
+          break
+        }
+
+        if (ativosBatch && ativosBatch.length > 0) {
+          allAtivos = [...allAtivos, ...ativosBatch]
+          ativosFrom += batchSize
+          ativosHasMore = ativosBatch.length === batchSize
+        } else {
+          ativosHasMore = false
+        }
+      }
+
+      // Cria mapa de lookup id -> base (convertendo para string para garantir correspondência)
+      const ativosMap = new Map()
+      allAtivos.forEach(a => ativosMap.set(String(a.id), a.base))
+
+      // Enriquece os dados com o campo base
+      const enrichedData = allData.map(item => ({
+        ...item,
+        base: ativosMap.get(String(item.id_colaborador)) || 'Sem Base'
+      }))
+
+      setData(enrichedData)
     } catch (err) {
       console.error('Erro ao buscar dados:', err)
       setError(err.message || 'Erro ao carregar dados')

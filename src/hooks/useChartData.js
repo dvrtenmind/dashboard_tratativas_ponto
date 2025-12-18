@@ -51,6 +51,11 @@ export function useChartData() {
         }
       }
 
+      // Filtro por base
+      if (filters.bases && filters.bases.length > 0) {
+        if (!filters.bases.includes(item.base)) return false
+      }
+
       return true
     })
   }, [ocorrencias, filters])

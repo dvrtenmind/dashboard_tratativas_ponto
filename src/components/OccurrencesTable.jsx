@@ -108,8 +108,14 @@ function OccurrencesTable() {
               <th className="px-2 py-2 text-left font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700" onClick={() => handleSort('data')}>
                 Data {sortConfig.key === 'data' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </th>
+              <th className="px-2 py-2 text-left font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700" onClick={() => handleSort('id_colaborador')}>
+                Matrícula {sortConfig.key === 'id_colaborador' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
               <th className="px-2 py-2 text-left font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700" onClick={() => handleSort('nome')}>
                 Colaborador {sortConfig.key === 'nome' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th className="px-2 py-2 text-left font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700" onClick={() => handleSort('base')}>
+                Base {sortConfig.key === 'base' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </th>
               <th className="px-2 py-2 text-left font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700" onClick={() => handleSort('situacao')}>
                 Situação {sortConfig.key === 'situacao' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -128,7 +134,7 @@ function OccurrencesTable() {
           <tbody>
             {sortedData.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-2 py-8 text-center text-neutral-500 dark:text-neutral-400">
+                <td colSpan="8" className="px-2 py-8 text-center text-neutral-500 dark:text-neutral-400">
                   Nenhum registro encontrado
                 </td>
               </tr>
@@ -147,7 +153,13 @@ function OccurrencesTable() {
                     {item.data ? format(parseISO(item.data), 'dd/MM/yyyy') : '-'}
                   </td>
                   <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
+                    {item.id_colaborador || '-'}
+                  </td>
+                  <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
                     {item.nome || '-'}
+                  </td>
+                  <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
+                    {item.base || '-'}
                   </td>
                   <td className="px-2 py-2 text-neutral-700 dark:text-neutral-300">
                     {item.situacao || '-'}

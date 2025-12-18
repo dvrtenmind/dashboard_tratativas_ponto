@@ -7,7 +7,8 @@ export function FilterProvider({ children }) {
     dateRange: { start: null, end: null },
     situacoes: [],
     colaboradores: [],
-    matriculas: ''
+    matriculas: '',
+    bases: []
   })
 
   const updateDateRange = (start, end) => {
@@ -38,6 +39,25 @@ export function FilterProvider({ children }) {
     }))
   }
 
+  const updateBases = (bases) => {
+    setFilters(prev => ({
+      ...prev,
+      bases
+    }))
+  }
+
+  const toggleBase = (base) => {
+    setFilters(prev => {
+      const isSelected = prev.bases.includes(base)
+      return {
+        ...prev,
+        bases: isSelected
+          ? prev.bases.filter(b => b !== base)
+          : [...prev.bases, base]
+      }
+    })
+  }
+
   const toggleSituacao = (situacao) => {
     setFilters(prev => {
       const isSelected = prev.situacoes.includes(situacao)
@@ -55,7 +75,8 @@ export function FilterProvider({ children }) {
       dateRange: { start: null, end: null },
       situacoes: [],
       colaboradores: [],
-      matriculas: ''
+      matriculas: '',
+      bases: []
     })
   }
 
@@ -66,6 +87,8 @@ export function FilterProvider({ children }) {
       updateSituacoes,
       updateColaboradores,
       updateMatriculas,
+      updateBases,
+      toggleBase,
       toggleSituacao,
       clearFilters
     }}>

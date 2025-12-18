@@ -151,10 +151,32 @@ export const exportTableToExcel = (allData) => {
     return true
   }
 
+  // Função para reordenar colunas (base sempre na 4ª posição)
+  const reorderColumns = (data) => {
+    const columnOrder = ['data', 'id_colaborador', 'nome', 'base', 'situacao', 'descricao_horario', 'total_horas_ocorrencia', 'justificativa']
+
+    return data.map(item => {
+      const ordered = {}
+      // Primeiro adiciona as colunas na ordem definida
+      columnOrder.forEach(col => {
+        if (item.hasOwnProperty(col)) {
+          ordered[col] = item[col]
+        }
+      })
+      // Depois adiciona as demais colunas que não estão na lista
+      Object.keys(item).forEach(key => {
+        if (!columnOrder.includes(key)) {
+          ordered[key] = item[key]
+        }
+      })
+      return ordered
+    })
+  }
+
   const resumoData = []
 
   // 1. Aba "Dados" - Todos os registros filtrados
-  const dadosWorksheet = XLSX.utils.json_to_sheet(allData)
+  const dadosWorksheet = XLSX.utils.json_to_sheet(reorderColumns(allData))
   XLSX.utils.book_append_sheet(workbook, dadosWorksheet, 'Dados')
 
   const totaisDados = calcularTotais(allData)
@@ -173,7 +195,7 @@ export const exportTableToExcel = (allData) => {
   })
 
   if (marcacoesInvalidas.length > 0) {
-    const worksheet = XLSX.utils.json_to_sheet(marcacoesInvalidas)
+    const worksheet = XLSX.utils.json_to_sheet(reorderColumns(marcacoesInvalidas))
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Marcações Inválidas')
 
     const totais = calcularTotais(marcacoesInvalidas)
@@ -216,7 +238,7 @@ export const exportTableToExcel = (allData) => {
   })
 
   if (debitoCreditoMesmoDia.length > 0) {
-    const worksheet = XLSX.utils.json_to_sheet(debitoCreditoMesmoDia)
+    const worksheet = XLSX.utils.json_to_sheet(reorderColumns(debitoCreditoMesmoDia))
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Débito e Crédito')
 
     const totais = calcularTotais(debitoCreditoMesmoDia)
@@ -242,7 +264,7 @@ export const exportTableToExcel = (allData) => {
   })
 
   if (horasExtras6h.length > 0) {
-    const worksheet = XLSX.utils.json_to_sheet(horasExtras6h)
+    const worksheet = XLSX.utils.json_to_sheet(reorderColumns(horasExtras6h))
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Horas Extras +6h')
 
     const totais = calcularTotais(horasExtras6h)
@@ -260,7 +282,7 @@ export const exportTableToExcel = (allData) => {
   })
 
   if (folgasTrabalhadas.length > 0) {
-    const worksheet = XLSX.utils.json_to_sheet(folgasTrabalhadas)
+    const worksheet = XLSX.utils.json_to_sheet(reorderColumns(folgasTrabalhadas))
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Folgas Trabalhadas')
 
     const totais = calcularTotais(folgasTrabalhadas)
@@ -280,7 +302,7 @@ export const exportTableToExcel = (allData) => {
   })
 
   if (debitosBH.length > 0) {
-    const worksheet = XLSX.utils.json_to_sheet(debitosBH)
+    const worksheet = XLSX.utils.json_to_sheet(reorderColumns(debitosBH))
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Débito BH')
 
     const totais = calcularTotais(debitosBH)
@@ -319,7 +341,7 @@ export const exportTableToExcel = (allData) => {
       }
     })
 
-    const worksheet = XLSX.utils.json_to_sheet(enrichedData)
+    const worksheet = XLSX.utils.json_to_sheet(reorderColumns(enrichedData))
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Incompatibilidade Jornada')
 
     const totais = calcularTotais(incompatibilidadesUnicas)

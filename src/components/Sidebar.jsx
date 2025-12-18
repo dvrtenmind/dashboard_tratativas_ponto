@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext'
 import { useState, useEffect } from 'react'
 
 function Sidebar() {
-  const { filters, updateDateRange, updateSituacoes, updateColaboradores, updateMatriculas, clearFilters } = useFilters()
+  const { filters, updateDateRange, updateSituacoes, updateColaboradores, updateMatriculas, toggleBase, clearFilters } = useFilters()
   const { data: ocorrencias } = useData()
 
   const [startDate, setStartDate] = useState('')
@@ -12,6 +12,8 @@ function Sidebar() {
   const [colaboradoresList, setColaboradoresList] = useState([])
   const [searchColaborador, setSearchColaborador] = useState('')
   const [matriculaFilter, setMatriculaFilter] = useState('')
+  const [basesList, setBasesList] = useState([])
+  const [searchBase, setSearchBase] = useState('')
 
   // Extrai valores únicos dos dados para os filtros
   useEffect(() => {
@@ -26,6 +28,10 @@ function Sidebar() {
         nome: item.nome
       })).filter(c => c.id && c.nome).map(JSON.stringify))].map(JSON.parse)
       setColaboradoresList(uniqueColaboradores.sort((a, b) => a.nome.localeCompare(b.nome)))
+
+      // Bases únicas
+      const uniqueBases = [...new Set(ocorrencias.map(item => item.base).filter(Boolean))]
+      setBasesList(uniqueBases.sort())
     }
   }, [ocorrencias])
 
@@ -109,6 +115,35 @@ function Sidebar() {
           </p>
         </div>
 
+        {/* Filtro por Base */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            Base
+          </h3>
+          <input
+            type="text"
+            value={searchBase}
+            onChange={(e) => setSearchBase(e.target.value)}
+            placeholder="Buscar base..."
+            className="w-full px-3 py-2 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-600 text-neutral-900 dark:text-neutral-50"
+          />
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {basesList.filter(b => b.toLowerCase().includes(searchBase.toLowerCase())).map(base => (
+              <label key={base} className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={filters.bases.includes(base)}
+                  onChange={() => toggleBase(base)}
+                  className="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-50 focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-600"
+                />
+                <span className="text-sm text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-neutral-50">
+                  {base}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Filtro por Situação/Ocorrência */}
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -168,6 +203,7 @@ function Sidebar() {
             setEndDate('')
             setSearchColaborador('')
             setMatriculaFilter('')
+            setSearchBase('')
           }}
           className="w-full px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
         >
