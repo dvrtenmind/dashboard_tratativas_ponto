@@ -151,9 +151,22 @@ export const exportTableToExcel = (allData) => {
     return true
   }
 
-  // Função para reordenar colunas (base sempre na 4ª posição)
+  // Função para reordenar colunas (ordem do banco de dados)
   const reorderColumns = (data) => {
-    const columnOrder = ['data', 'id_colaborador', 'nome', 'base', 'situacao', 'descricao_horario', 'total_horas_ocorrencia', 'justificativa']
+    const columnOrder = [
+      'id_registro',
+      'id_colaborador',
+      'nome',
+      'data',
+      'escala',
+      'codigo_horario',
+      'descricao_horario',
+      'inicio',
+      'termino',
+      'total_horas',
+      'situacao',
+      'total_horas_ocorrencia'
+    ]
 
     return data.map(item => {
       const ordered = {}
